@@ -204,12 +204,7 @@ struct PopoverFavoriteRow: View {
             !store.recentlyActiveBundleIDs.contains($0.bundleIdentifier)
         }
 
-        let sectionCount = (pinned.isEmpty ? 0 : 1) + (recent.isEmpty ? 0 : 1) + (other.isEmpty ? 0 : 1)
-        let totalRows = pinned.count + recent.count + other.count
-        let totalHeight = CGFloat(sectionCount) * 26 + CGFloat(totalRows) * 36
-        let needsScroll = totalHeight > 430
-
-        ScrollView {
+        ScrollView(.vertical, showsIndicators: true) {
             VStack(alignment: .leading, spacing: 0) {
                 if !favVM.favorites.isEmpty {
                     SectionHeader(title: "FAVORITES", icon: "star.fill", count: favVM.favorites.count)
@@ -286,8 +281,7 @@ struct PopoverFavoriteRow: View {
                 }
             }
         }
-        .scrollDisabled(!needsScroll)
-        .frame(maxHeight: needsScroll ? 430 : nil)
+        .frame(maxHeight: 430)
     }
 
     // MARK: - Footer

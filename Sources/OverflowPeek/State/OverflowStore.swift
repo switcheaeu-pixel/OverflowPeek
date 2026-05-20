@@ -33,6 +33,7 @@ final class OverflowStore: ObservableObject {
     private func startObserving() {
         let center = NSWorkspace.shared.notificationCenter
 
+        // Launch / terminate: full rebuild, because the candidate set changes.
         observers.append(center.addObserver(
             forName: NSWorkspace.didLaunchApplicationNotification,
             object: nil, queue: .main
@@ -43,12 +44,50 @@ final class OverflowStore: ObservableObject {
             object: nil, queue: .main
         ) { [weak self] _ in self?.rebuildAppList() })
 
+        // Activation: cheap in-place update + recent-history tracking.
         observers.append(center.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification,
             object: nil, queue: .main
-        ) { [weak self] _ in self?.rebuildAppList() })
+        ) { [weak self] note in
+            guard let self else { return }
+            let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+            self.applyActivation(app)
+        })
 
         rebuildAppList()
+    }
+
+    /// Cheap in-place active-flag update + recent-history bump.
+    /// Avoids a full re-fetch from NSWorkspace for every focus change.
+    private func applyActivation(_ app: NSRunningApplication?) {
+        guard let app, let bid = app.bundleIdentifier else { return }
+
+        // Auto-track activations from anywhere (Dock, Spotlight, Cmd-Tab, our launcher).
+        // Skip our own process so opening the launcher doesn't pollute recent history.
+        if bid != "com.overflowpeek.app" {
+            recordLaunch(bid)
+        }
+
+        activeBundleID = bid
+
+        // Patch isActive flags without rebuilding the whole list.
+        var changed = false
+        allApps = allApps.map { result in
+            let nowActive = result.bundleIdentifier == bid
+            if nowActive != result.isActive {
+                changed = true
+                return AppDetectionResult(item: result.item,
+                                          confidence: result.confidence,
+                                          isActive: nowActive)
+            }
+            return result
+        }
+
+        // If the activated app wasn't yet in the list (just launched + activated in
+        // rapid succession, before launch notification flushed), fall back to rebuild.
+        if !changed && !allApps.contains(where: { $0.bundleIdentifier == bid }) {
+            rebuildAppList()
+        }
     }
 
     private func stopObserving() {
@@ -113,12 +152,23 @@ final class OverflowStore: ObservableObject {
 
     func activateApp(_ bundleID: String) {
         guard let app = NSWorkspace.shared.runningApplications
-            .first(where: { $0.bundleIdentifier == bundleID }) else {
+            .first(where: { $0.bundleIdentifier == bundleID && !$0.isTerminated }) else {
             errorMessage = "App is not running"
             return
         }
 
-        let success = app.activate(options: [.activateIgnoringOtherApps, .activateAllWindows])
+        // If the app is hidden, unhiding alone is sometimes enough; otherwise activate.
+        if app.isHidden { app.unhide() }
+
+        let success: Bool
+        if #available(macOS 14.0, *) {
+            // Modern API: doesn't take options, brings the app forward.
+            app.activate()
+            success = true
+        } else {
+            success = app.activate(options: [.activateIgnoringOtherApps, .activateAllWindows])
+        }
+
         if success {
             recordLaunch(bundleID)
             errorMessage = nil
@@ -137,20 +187,31 @@ final class OverflowStore: ObservableObject {
     }
 
     func quitApp(_ bundleID: String) {
-        guard let app = NSWorkspace.shared.runningApplications
-            .first(where: { $0.bundleIdentifier == bundleID }) else {
+        let candidates = NSWorkspace.shared.runningApplications.filter {
+            !$0.isTerminated && $0.bundleIdentifier == bundleID
+        }
+        guard !candidates.isEmpty else {
             errorMessage = "App is not running"
             return
         }
-        let script = "tell application id \"\(bundleID)\" to quit"
-        if let appleScript = NSAppleScript(source: script) {
-            var error: NSDictionary?
-            appleScript.executeAndReturnError(&error)
-            if error != nil {
-                app.terminate()
+        errorMessage = nil
+
+        for app in candidates {
+            _ = app.terminate()
+            // Some apps (Electron-based menu bar apps in particular) intercept the
+            // standard quit AppleEvent and stay alive. If the process is still around
+            // after a grace period, force-quit it.
+            let pid = app.processIdentifier
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                if let still = NSRunningApplication(processIdentifier: pid), !still.isTerminated {
+                    _ = still.forceTerminate()
+                }
             }
-        } else {
-            app.terminate()
+        }
+
+        // Refresh after the grace period so the row updates from "Running" → gone.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            self?.rebuildAppList()
         }
     }
 
