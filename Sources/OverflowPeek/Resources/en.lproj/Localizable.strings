@@ -1,0 +1,135 @@
+/* App Name & Description */
+"app.name" = "Overflow Peek";
+"app.subtitle" = "Manage your menu bar";
+"app.description" = "A macOS menu bar utility to manage apps that get hidden when your menu bar is full.";
+
+/* Main Popover */
+"popover.header.title" = "Overflow Peek";
+"popover.header.subtitle" = "Manage your menu bar";
+"popover.search.placeholder" = "Search apps…";
+
+/* Section Headers */
+"section.pinned_apps" = "Pinned Apps";
+"section.running_apps" = "Running Menu Bar Apps";
+
+/* Buttons */
+"button.pin_app" = "Pin App";
+"button.unpin" = "Unpin";
+"button.open" = "Open";
+"button.refresh" = "Refresh";
+"button.done" = "Done";
+"button.clear_search" = "Clear Search";
+"button.view_details" = "View Details";
+"button.reveal_in_finder" = "Reveal in Finder";
+"button.hide_from_list" = "Hide from List";
+"button.quit" = "Quit";
+"button.cancel" = "Cancel";
+
+/* Button Hints */
+"hint.pin_app" = "Add any running app to the pinned list";
+"hint.unpin" = "Remove from pinned list";
+"hint.open" = "Launches or focuses the app";
+"hint.refresh" = "Update the list of running menu bar apps";
+"hint.search_clear" = "Remove search query";
+"hint.view_details" = "Shows information about the app";
+
+/* Context Menu */
+"context.open" = "Open";
+"context.view_details" = "View Details";
+"context.pin" = "Pin";
+"context.unpin" = "Unpin";
+"context.reveal_in_finder" = "Reveal in Finder";
+"context.hide_from_list" = "Hide from List";
+"context.quit_app" = "Quit";
+"context.force_kill" = "Force Kill";
+"context.force_kill_warning" = "This will immediately terminate the app without saving. Are you sure?";
+
+/* Empty States */
+"empty.no_results" = "No results";
+"empty.no_results_hint" = "Try a different search term.";
+"empty.no_menu_bar_apps" = "No menu bar apps found";
+"empty.no_menu_bar_apps_hint" = "This view shows third-party accessory apps only.";
+"empty.no_pinned_apps" = "No pinned apps";
+"empty.no_pinned_apps_hint" = "Open the popover and click \"Pin App\" to add apps.";
+
+/* Settings Window */
+"settings.title" = "Overflow Peek Settings";
+"settings.subtitle" = "Customize your experience";
+"settings.general" = "General";
+"settings.pinned_apps" = "Pinned Apps";
+"settings.about" = "About";
+
+/* General Settings */
+"settings.behaviour" = "Behaviour";
+"settings.launch_at_login" = "Launch at Login";
+"settings.launch_at_login_help" = "Start Overflow Peek automatically when you log in";
+
+"settings.auto_refresh" = "Auto-Refresh";
+"settings.refresh_interval" = "Refresh interval";
+"settings.refresh_disabled" = "Disabled";
+"settings.refresh_5s" = "Every 5s";
+"settings.refresh_10s" = "Every 10s";
+"settings.refresh_30s" = "Every 30s";
+"settings.refresh_1m" = "Every 1m";
+"settings.refresh_help" = "Automatically refresh the list of running menu bar apps";
+
+"settings.running_apps" = "Running Apps";
+"settings.detected_menu_bar_apps" = "Detected menu bar apps";
+"settings.refresh_now" = "Refresh Now";
+
+"settings.keyboard_shortcuts" = "Keyboard Shortcuts";
+"settings.manage_shortcuts" = "Manage Shortcuts...";
+
+/* Pin Picker */
+"pin_picker.title" = "Pin an App";
+"pin_picker.subtitle" = "Add any running app to the Overflow Peek panel";
+"pin_picker.search.placeholder" = "Search apps…";
+"pin_picker.hint" = "Pinned apps stay in the panel even when not running, so you can launch them quickly.";
+
+/* App Details */
+"details.title" = "App Details";
+"details.close" = "Close";
+"details.bundle_id" = "Bundle ID";
+"details.path" = "Path";
+"details.version" = "Version";
+"details.running_status" = "Running Status";
+"details.is_running" = "Running";
+"details.not_running" = "Not Running";
+
+/* Status Messages */
+"status.apps_detected" = "apps detected";
+"status.app_singular" = "app";
+"status.apps_plural" = "apps";
+"status.pinned_singular" = "1 pinned app";
+"status.pinned_plural" = "%d pinned apps";
+
+/* First Launch */
+"first_launch.title" = "Welcome to Overflow Peek";
+"first_launch.message" = "Manage hidden menu bar apps with ease.";
+"first_launch.tips" = "💡 Quick Tips:\n• Left-click the menu bar icon to see your apps\n• Right-click for settings and refresh\n• Drag apps here to pin them for quick access\n• Double-click any app to open it\n• Use Cmd+Shift+M to toggle the panel";
+"first_launch.description" = "Hidden apps in your menu bar clutter your interface. Overflow Peek keeps them organized and accessible.";
+"first_launch.got_it" = "Got It";
+"first_launch.show_again" = "Show Me Tips Again";
+
+/* About */
+"about.title" = "About Overflow Peek";
+"about.version" = "Version";
+"about.build" = "Build";
+"about.copyright" = "© 2026 Overflow Peek. All rights reserved.";
+"about.description" = "A macOS menu bar utility to manage apps that get hidden when your menu bar is full.";
+"about.features.title" = "Features";
+"about.features.auto_detect" = "Auto-detects hidden menu bar apps";
+"about.features.pin_any_app" = "Pin any app for quick access";
+"about.features.persistent" = "Pinned apps survive restarts";
+"about.features.search" = "Search and filter apps";
+"about.features.keyboard_shortcuts" = "Global keyboard shortcuts";
+
+/* Accessibility */
+"a11y.pin_app" = "Pin App";
+"a11y.unpin_app" = "Unpin App";
+"a11y.open_app" = "Open App";
+"a11y.focus_app" = "Focus App";
+"a11y.launch_app" = "Launch App";
+"a11y.refresh" = "Refresh";
+"a11y.app_icon" = "App icon";
+"a11y.app_running" = "running";

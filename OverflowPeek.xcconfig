@@ -1,0 +1,15 @@
+// Xcode Build Configuration for OverflowPeek
+// This file is automatically loaded when opening Package.swift in Xcode
+
+PRODUCT_NAME = OverflowPeek
+PRODUCT_BUNDLE_IDENTIFIER = com.overflowpeek.app
+MACOSX_DEPLOYMENT_TARGET = 13.0
+SWIFT_VERSION = 5.0
+CODE_SIGN_IDENTITY = -
+EXECUTABLE_NAME = OverflowPeek
+GENERATE_INFOPLIST_FILE = YES
+INFOPLIST_FILE = Info.plist
+INFOPLIST_KEY_CFBundleDisplayName = Overflow Peek
+INFOPLIST_KEY_LSUIElement = YES
+INFOPLIST_KEY_NSHumanReadableCopyright = © 2026 Overflow Peek
+INFOPLIST_KEY_NSPrincipalClass = NSApplication
