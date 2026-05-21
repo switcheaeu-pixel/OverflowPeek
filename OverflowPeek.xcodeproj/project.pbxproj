@@ -1,0 +1,459 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		01032B61B446D18DB5E83703 /* overflow_peek_icon.svg in Resources */ = {isa = PBXBuildFile; fileRef = 9793CA22B6B8A48AE758F1B8 /* overflow_peek_icon.svg */; };
+		179DF900FAAD47588C02A59C /* AppDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C82D3010176950DC47CBF335 /* AppDetailsView.swift */; };
+		3AD888E2ED516F9CFE692698 /* QuickActionsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A5DAF5D67EDBB9E42B3BF1C /* QuickActionsManager.swift */; };
+		413D54E373C483ACE33DE4F8 /* DragDropHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6276EAE24543C79BE57D2EB /* DragDropHandler.swift */; };
+		4404A2314B6C170F3ABDA31F /* OverflowPeekApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FD6E5D6B860C00BA083C5E /* OverflowPeekApp.swift */; };
+		49C86493BD08BAC141D7AF50 /* OverflowStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CB4414865DBAA004D0B3C0E /* OverflowStore.swift */; };
+		52CAE97FE7257B6717268F89 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCD9AB4C19FBA64B1968188A /* SettingsView.swift */; };
+		59A93AD4DF1B2F448AA1EE90 /* FavoriteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2626760C8A4A490355FF1BF8 /* FavoriteApp.swift */; };
+		5FED146ED72E37DEC570F469 /* AppHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15915CCA0770C7E71972802 /* AppHelpers.swift */; };
+		674CF1206DF3870922722BAA /* KeyboardShortcutSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A819EC1A2059AF8D2BF0AF72 /* KeyboardShortcutSettings.swift */; };
+		6C85F8055FE8109818B79A9D /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04CDE27DE4DDD78F8A64AF88 /* StatusItemController.swift */; };
+		7475523DCCE8138B55A7248A /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = E589302AB90FAF6CA86EBB5F /* AppIcon.icns */; };
+		7BAFFBAA73995D1C3975499D /* AppDetectionResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE81A3F16B7726D2F75EDB8E /* AppDetectionResult.swift */; };
+		8C186F9B325D1394065AA424 /* AppHeuristicsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD91DA670B51FCCB92B1018D /* AppHeuristicsEngine.swift */; };
+		8D4F344213332DDB5492F532 /* PopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C5E2C2C497291AD2B08FA22 /* PopoverView.swift */; };
+		A27C3B84304CEF0F198BF1E8 /* AppDetailsComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 193B69890600F3EAAF2FB3F6 /* AppDetailsComponents.swift */; };
+		A6131644E29EDC7117B1E80A /* InclusionExclusionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B19BA9D87813C200C43217F3 /* InclusionExclusionManager.swift */; };
+		A78F6579A85C5B68AC1A2501 /* MenuBarAppItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88FD6BC7BB99DAD790256148 /* MenuBarAppItem.swift */; };
+		A8016FB662EA72A09FD1332C /* FavoriteAppsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FADC6E0C648EF1E7CCCCA8C9 /* FavoriteAppsViewModel.swift */; };
+		B13C11A7B7FC47884C470C00 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 513BDAE0889FD5E41A890029 /* AppDelegate.swift */; };
+		B3F12A02F293F2FA8FA385C9 /* LaunchAtLogin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C023A42F97FA29C382AEA /* LaunchAtLogin.swift */; };
+		D8A2C9181D3A79A91DE4D848 /* AppRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FB87C776D0F87A5D2740986 /* AppRowView.swift */; };
+		E24683DE65C665E89B83899A /* AppDiscoveryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F55AE64115C38EF7FB01B4E2 /* AppDiscoveryService.swift */; };
+		EA2002530FBD275094292388 /* AppConfidence.swift in Sources */ = {isa = PBXBuildFile; fileRef = E296744482412B011D61F487 /* AppConfidence.swift */; };
+		EAD567ABED4025213F8F4F69 /* PopoverController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B802A057C4822A869078739 /* PopoverController.swift */; };
+		EBE7CA9C655B2E2E341B7574 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 3D90F9CDFFF59AB88ABEFC06 /* Localizable.strings */; };
+		FF5558C8A1C7751433D39CB9 /* HotKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 216F496EA0272743282A3587 /* HotKeyManager.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		04CDE27DE4DDD78F8A64AF88 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
+		0B802A057C4822A869078739 /* PopoverController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverController.swift; sourceTree = "<group>"; };
+		0CB4414865DBAA004D0B3C0E /* OverflowStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverflowStore.swift; sourceTree = "<group>"; };
+		193B69890600F3EAAF2FB3F6 /* AppDetailsComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDetailsComponents.swift; sourceTree = "<group>"; };
+		1C5E2C2C497291AD2B08FA22 /* PopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverView.swift; sourceTree = "<group>"; };
+		20FD6E5D6B860C00BA083C5E /* OverflowPeekApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverflowPeekApp.swift; sourceTree = "<group>"; };
+		216F496EA0272743282A3587 /* HotKeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKeyManager.swift; sourceTree = "<group>"; };
+		2626760C8A4A490355FF1BF8 /* FavoriteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoriteApp.swift; sourceTree = "<group>"; };
+		3FB87C776D0F87A5D2740986 /* AppRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRowView.swift; sourceTree = "<group>"; };
+		513BDAE0889FD5E41A890029 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		88FD6BC7BB99DAD790256148 /* MenuBarAppItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarAppItem.swift; sourceTree = "<group>"; };
+		9793CA22B6B8A48AE758F1B8 /* overflow_peek_icon.svg */ = {isa = PBXFileReference; path = overflow_peek_icon.svg; sourceTree = "<group>"; };
+		9A5DAF5D67EDBB9E42B3BF1C /* QuickActionsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActionsManager.swift; sourceTree = "<group>"; };
+		A77C023A42F97FA29C382AEA /* LaunchAtLogin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLogin.swift; sourceTree = "<group>"; };
+		A819EC1A2059AF8D2BF0AF72 /* KeyboardShortcutSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutSettings.swift; sourceTree = "<group>"; };
+		AE81A3F16B7726D2F75EDB8E /* AppDetectionResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDetectionResult.swift; sourceTree = "<group>"; };
+		B063A21B25A63C39739CCF65 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		B19BA9D87813C200C43217F3 /* InclusionExclusionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InclusionExclusionManager.swift; sourceTree = "<group>"; };
+		BCD9AB4C19FBA64B1968188A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		C82D3010176950DC47CBF335 /* AppDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDetailsView.swift; sourceTree = "<group>"; };
+		D6276EAE24543C79BE57D2EB /* DragDropHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragDropHandler.swift; sourceTree = "<group>"; };
+		DD91DA670B51FCCB92B1018D /* AppHeuristicsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppHeuristicsEngine.swift; sourceTree = "<group>"; };
+		E15915CCA0770C7E71972802 /* AppHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppHelpers.swift; sourceTree = "<group>"; };
+		E296744482412B011D61F487 /* AppConfidence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfidence.swift; sourceTree = "<group>"; };
+		E589302AB90FAF6CA86EBB5F /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
+		E6C1D2E4E3CCB2B32F3178D7 /* OverflowPeek.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OverflowPeek.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F55AE64115C38EF7FB01B4E2 /* AppDiscoveryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDiscoveryService.swift; sourceTree = "<group>"; };
+		FADC6E0C648EF1E7CCCCA8C9 /* FavoriteAppsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoriteAppsViewModel.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		138854C8A7FB7BA8F6E6BE29 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				3D90F9CDFFF59AB88ABEFC06 /* Localizable.strings */,
+				E589302AB90FAF6CA86EBB5F /* AppIcon.icns */,
+				9793CA22B6B8A48AE758F1B8 /* overflow_peek_icon.svg */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		3DA18417CA1FF6E88A18F644 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				E296744482412B011D61F487 /* AppConfidence.swift */,
+				AE81A3F16B7726D2F75EDB8E /* AppDetectionResult.swift */,
+				2626760C8A4A490355FF1BF8 /* FavoriteApp.swift */,
+				88FD6BC7BB99DAD790256148 /* MenuBarAppItem.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		4A835BE79269E0DBC4DEFBB5 /* OverflowPeek */ = {
+			isa = PBXGroup;
+			children = (
+				C3C5539DF071EF1675666BBD /* Core */,
+				3DA18417CA1FF6E88A18F644 /* Models */,
+				138854C8A7FB7BA8F6E6BE29 /* Resources */,
+				79EDF153D234423AE591BB90 /* State */,
+				C938F15196B0B22CFC54A6A8 /* UI */,
+				513BDAE0889FD5E41A890029 /* AppDelegate.swift */,
+				193B69890600F3EAAF2FB3F6 /* AppDetailsComponents.swift */,
+				C82D3010176950DC47CBF335 /* AppDetailsView.swift */,
+				E15915CCA0770C7E71972802 /* AppHelpers.swift */,
+				3FB87C776D0F87A5D2740986 /* AppRowView.swift */,
+				D6276EAE24543C79BE57D2EB /* DragDropHandler.swift */,
+				FADC6E0C648EF1E7CCCCA8C9 /* FavoriteAppsViewModel.swift */,
+				A819EC1A2059AF8D2BF0AF72 /* KeyboardShortcutSettings.swift */,
+				A77C023A42F97FA29C382AEA /* LaunchAtLogin.swift */,
+				20FD6E5D6B860C00BA083C5E /* OverflowPeekApp.swift */,
+				BCD9AB4C19FBA64B1968188A /* SettingsView.swift */,
+			);
+			name = OverflowPeek;
+			path = Sources/OverflowPeek;
+			sourceTree = "<group>";
+		};
+		79EDF153D234423AE591BB90 /* State */ = {
+			isa = PBXGroup;
+			children = (
+				B19BA9D87813C200C43217F3 /* InclusionExclusionManager.swift */,
+				0CB4414865DBAA004D0B3C0E /* OverflowStore.swift */,
+				9A5DAF5D67EDBB9E42B3BF1C /* QuickActionsManager.swift */,
+			);
+			path = State;
+			sourceTree = "<group>";
+		};
+		88005FE629459CCE8E6715A0 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E6C1D2E4E3CCB2B32F3178D7 /* OverflowPeek.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		948C1DD96BBE01AECE5C87BB = {
+			isa = PBXGroup;
+			children = (
+				4A835BE79269E0DBC4DEFBB5 /* OverflowPeek */,
+				88005FE629459CCE8E6715A0 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C3C5539DF071EF1675666BBD /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				F55AE64115C38EF7FB01B4E2 /* AppDiscoveryService.swift */,
+				DD91DA670B51FCCB92B1018D /* AppHeuristicsEngine.swift */,
+				216F496EA0272743282A3587 /* HotKeyManager.swift */,
+				0B802A057C4822A869078739 /* PopoverController.swift */,
+				04CDE27DE4DDD78F8A64AF88 /* StatusItemController.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		C938F15196B0B22CFC54A6A8 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				1C5E2C2C497291AD2B08FA22 /* PopoverView.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		9FA8DD480A8BF55DE2BA1B7B /* OverflowPeek */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 18F606649E38224C1AB48F4B /* Build configuration list for PBXNativeTarget "OverflowPeek" */;
+			buildPhases = (
+				E27300BB38488B551199CA65 /* Sources */,
+				0560EA9E3E6BE4C941BD9762 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OverflowPeek;
+			packageProductDependencies = (
+			);
+			productName = OverflowPeek;
+			productReference = E6C1D2E4E3CCB2B32F3178D7 /* OverflowPeek.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F73356BB1B1EBAC21C31408D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					9FA8DD480A8BF55DE2BA1B7B = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
+				};
+			};
+			buildConfigurationList = 82C1BFAA3E3F7049485AC7D9 /* Build configuration list for PBXProject "OverflowPeek" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 948C1DD96BBE01AECE5C87BB;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 88005FE629459CCE8E6715A0 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				9FA8DD480A8BF55DE2BA1B7B /* OverflowPeek */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0560EA9E3E6BE4C941BD9762 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7475523DCCE8138B55A7248A /* AppIcon.icns in Resources */,
+				EBE7CA9C655B2E2E341B7574 /* Localizable.strings in Resources */,
+				01032B61B446D18DB5E83703 /* overflow_peek_icon.svg in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E27300BB38488B551199CA65 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EA2002530FBD275094292388 /* AppConfidence.swift in Sources */,
+				B13C11A7B7FC47884C470C00 /* AppDelegate.swift in Sources */,
+				A27C3B84304CEF0F198BF1E8 /* AppDetailsComponents.swift in Sources */,
+				179DF900FAAD47588C02A59C /* AppDetailsView.swift in Sources */,
+				7BAFFBAA73995D1C3975499D /* AppDetectionResult.swift in Sources */,
+				E24683DE65C665E89B83899A /* AppDiscoveryService.swift in Sources */,
+				5FED146ED72E37DEC570F469 /* AppHelpers.swift in Sources */,
+				8C186F9B325D1394065AA424 /* AppHeuristicsEngine.swift in Sources */,
+				D8A2C9181D3A79A91DE4D848 /* AppRowView.swift in Sources */,
+				413D54E373C483ACE33DE4F8 /* DragDropHandler.swift in Sources */,
+				59A93AD4DF1B2F448AA1EE90 /* FavoriteApp.swift in Sources */,
+				A8016FB662EA72A09FD1332C /* FavoriteAppsViewModel.swift in Sources */,
+				FF5558C8A1C7751433D39CB9 /* HotKeyManager.swift in Sources */,
+				A6131644E29EDC7117B1E80A /* InclusionExclusionManager.swift in Sources */,
+				674CF1206DF3870922722BAA /* KeyboardShortcutSettings.swift in Sources */,
+				B3F12A02F293F2FA8FA385C9 /* LaunchAtLogin.swift in Sources */,
+				A78F6579A85C5B68AC1A2501 /* MenuBarAppItem.swift in Sources */,
+				4404A2314B6C170F3ABDA31F /* OverflowPeekApp.swift in Sources */,
+				49C86493BD08BAC141D7AF50 /* OverflowStore.swift in Sources */,
+				EAD567ABED4025213F8F4F69 /* PopoverController.swift in Sources */,
+				8D4F344213332DDB5492F532 /* PopoverView.swift in Sources */,
+				3AD888E2ED516F9CFE692698 /* QuickActionsManager.swift in Sources */,
+				52CAE97FE7257B6717268F89 /* SettingsView.swift in Sources */,
+				6C85F8055FE8109818B79A9D /* StatusItemController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		3D90F9CDFFF59AB88ABEFC06 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B063A21B25A63C39739CCF65 /* en */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		0DDAAEEEEF8278F040B8B930 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.overflowpeek.app;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		407BBB5E0830BBAAD706AFD4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = OverflowPeek;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		6881FA5BFF195D21C661554C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = OverflowPeek;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		C905B0A98DC9E2B6E7513D7B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.overflowpeek.app;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		18F606649E38224C1AB48F4B /* Build configuration list for PBXNativeTarget "OverflowPeek" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C905B0A98DC9E2B6E7513D7B /* Debug */,
+				0DDAAEEEEF8278F040B8B930 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		82C1BFAA3E3F7049485AC7D9 /* Build configuration list for PBXProject "OverflowPeek" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6881FA5BFF195D21C661554C /* Debug */,
+				407BBB5E0830BBAAD706AFD4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F73356BB1B1EBAC21C31408D /* Project object */;
+}
