@@ -14,6 +14,7 @@ final class PopoverController: NSObject, NSPopoverDelegate {
     private let onAppLaunched: () -> Void
 
     private static let width: CGFloat = 320
+    private static let switcherWidth: CGFloat = 600
     private static let minHeight: CGFloat = 160
     private static let maxHeight: CGFloat = 520
 
@@ -36,6 +37,7 @@ final class PopoverController: NSObject, NSPopoverDelegate {
     }
 
     func show(relativeTo rect: NSRect, of view: NSView) {
+        store.invocationMode = .manager
         setupContent(for: popover)
         popover.show(relativeTo: rect, of: view, preferredEdge: .minY)
         popover.contentViewController?.view.window?.makeKey()
@@ -44,10 +46,11 @@ final class PopoverController: NSObject, NSPopoverDelegate {
 
     func showAtScreenCenter() {
         guard NSScreen.main != nil else { return }
+        store.invocationMode = .switcher
 
         if shortcutWindow == nil {
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: Self.width, height: Self.minHeight),
+                contentRect: NSRect(x: 0, y: 0, width: Self.switcherWidth, height: Self.minHeight),
                 styleMask: [.titled, .fullSizeContentView],
                 backing: .buffered,
                 defer: false
@@ -134,13 +137,13 @@ final class PopoverController: NSObject, NSPopoverDelegate {
             let footer: CGFloat = 32
             let target = min(max(size.height + footer, Self.minHeight), Self.maxHeight)
             self.shortcutWindowTargetHeight = target
-            w.setContentSize(NSSize(width: Self.width, height: target))
+            w.setContentSize(NSSize(width: Self.switcherWidth, height: target))
             self.recenterShortcutWindow()
         }
         if let w = window {
             w.contentViewController = hosting
             if w.frame.width == 0 || w.frame.height == 0 {
-                w.setContentSize(NSSize(width: Self.width, height: Self.minHeight))
+                w.setContentSize(NSSize(width: Self.switcherWidth, height: Self.minHeight))
             }
         }
     }

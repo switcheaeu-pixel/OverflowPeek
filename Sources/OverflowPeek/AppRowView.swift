@@ -9,55 +9,65 @@ struct AppRowView: View {
     let onQuit: (() -> Void)?
     let onHide: (() -> Void)?
     let onDetails: (() -> Void)?
+    var hideActionsOnSelection: Bool = false
     @State private var isHovered = false
 
     private var isPinned: Bool { app.confidence == .pinned }
 
     var body: some View {
         HStack(spacing: 8) {
-            appIcon
-            VStack(alignment: .leading, spacing: 1) {
-                Text(app.name)
-                    .font(.system(size: 13, weight: .medium))
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                Text(app.bundleIdentifier)
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
+            Group {
+                if let icon = app.item.icon {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 28, height: 28)
+                        .cornerRadius(5)
+                } else {
+                    Image(systemName: "app.fill")
+                        .font(.system(size: 22))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 28, height: 28)
+                }
             }
+
+            Text(app.name)
+                .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                .lineLimit(1)
+                .truncationMode(.tail)
+
             Spacer()
+
+            if isPinned {
+                Circle()
+                    .fill(Color.accentColor.opacity(0.5))
+                    .frame(width: 5, height: 5)
+            }
+
             trailingButton
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .frame(height: 36)
-        .background(selectionBackground)
+        .frame(height: 38)
+        .background(
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .fill(isSelected ? Color.accentColor.opacity(0.15) : (isHovered ? Color.primary.opacity(0.06) : Color.clear))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .strokeBorder(
+                    isSelected ? Color.accentColor.opacity(0.4) : Color.clear,
+                    lineWidth: 1
+                )
+        )
         .contentShape(Rectangle())
         .onHover { isHovered = $0 }
     }
 
-    private var appIcon: some View {
-        Group {
-            if let icon = app.item.icon {
-                Image(nsImage: icon)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 24, height: 24)
-                    .cornerRadius(4)
-            } else {
-                Image(systemName: "app.fill")
-                    .font(.system(size: 20))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 24, height: 24)
-            }
-        }
-    }
-
     @ViewBuilder
     private var trailingButton: some View {
-        if isHovered || isSelected {
+        let shouldShow = hideActionsOnSelection ? isHovered : (isHovered || isSelected)
+        if shouldShow {
             HStack(spacing: 2) {
                 if let onQuit = onQuit {
                     Button(action: onQuit) {
@@ -98,10 +108,5 @@ struct AppRowView: View {
                 }
             }
         }
-    }
-
-    private var selectionBackground: some View {
-        RoundedRectangle(cornerRadius: 6, style: .continuous)
-            .fill(isSelected ? Color.accentColor.opacity(0.15) : (isHovered ? Color.primary.opacity(0.05) : Color.clear))
     }
 }

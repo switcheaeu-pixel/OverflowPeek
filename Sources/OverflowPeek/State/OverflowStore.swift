@@ -1,6 +1,14 @@
 import SwiftUI
 import AppKit
 
+/// How the launcher window was opened. Drives content ordering, chrome, and footer.
+enum InvocationMode {
+    /// Menu-bar click → favorites/management-first ordering, full row actions.
+    case manager
+    /// Global keyboard shortcut → Spotlight-style switcher: Open Now first, minimal chrome.
+    case switcher
+}
+
 /// Central state container for Overflow Peek.
 /// Observes NSWorkspace notifications for live app list updates — no polling.
 @MainActor
@@ -9,6 +17,7 @@ final class OverflowStore: ObservableObject {
     @Published var searchQuery: String = ""
     @Published var isLoading = false
     @Published var errorMessage: String? = nil
+    @Published var invocationMode: InvocationMode = .manager
 
     private let listService = AppListService()
     private let inclusionManager = InclusionExclusionManager()
@@ -117,11 +126,55 @@ final class OverflowStore: ObservableObject {
 
     var filteredApps: [AppDetectionResult] {
         guard !searchQuery.isEmpty else { return allApps }
-        let query = searchQuery.lowercased()
-        return allApps.filter { result in
-            result.name.lowercased().contains(query) ||
-            result.bundleIdentifier.lowercased().contains(query)
+        let q = searchQuery
+        // Fuzzy match by name (preferred) or bundle id (fallback). Sorted by score desc.
+        let scored = allApps.compactMap { result -> (AppDetectionResult, Int)? in
+            let nameScore = Self.fuzzyScore(query: q, target: result.name) ?? -1
+            let bidScore  = (Self.fuzzyScore(query: q, target: result.bundleIdentifier) ?? -1) / 2
+            let best = max(nameScore, bidScore)
+            return best > 0 ? (result, best) : nil
         }
+        return scored.sorted { $0.1 > $1.1 }.map { $0.0 }
+    }
+
+    /// Apps to surface in switcher mode's top "Open Now" section: every filtered app
+    /// except the frontmost (so the list always biases toward switching to *another*
+    /// app) and except favorites that are already listed in their own section.
+    func openNowItems(excludingFavoriteBundleIDs favoriteBundleIDs: Set<String>) -> [AppDetectionResult] {
+        let frontmost = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+        return filteredApps.filter { result in
+            if result.bundleIdentifier == frontmost { return false }
+            if favoriteBundleIDs.contains(result.bundleIdentifier) { return false }
+            return true
+        }
+    }
+
+    /// Lightweight subsequence fuzzy match. Returns nil if not all query characters
+    /// can be found in order; otherwise returns a heuristic score (higher = better).
+    /// Bonuses: consecutive matches, word-start matches, prefix match.
+    static func fuzzyScore(query: String, target: String) -> Int? {
+        let q = Array(query.lowercased())
+        let t = Array(target.lowercased())
+        guard !q.isEmpty else { return 0 }
+        var qi = 0
+        var score = 0
+        var consecutive = 0
+        var prevWasSeparator = true
+        for (ti, ch) in t.enumerated() {
+            if qi < q.count && ch == q[qi] {
+                var bonus = 1
+                if ti == qi { bonus += 4 }              // prefix match
+                if prevWasSeparator { bonus += 3 }      // matches at word start
+                consecutive += 1
+                bonus += consecutive
+                score += bonus
+                qi += 1
+            } else {
+                consecutive = 0
+            }
+            prevWasSeparator = (ch == " " || ch == "-" || ch == "_" || ch == ".")
+        }
+        return qi == q.count ? score : nil
     }
 
     var pinnedAppItems: [AppDetectionResult] {

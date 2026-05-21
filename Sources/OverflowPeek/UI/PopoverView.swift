@@ -1,4 +1,5 @@
 import SwiftUI
+import Darwin
 
 // MARK: - Popover View
 struct PopoverView: View {
@@ -7,11 +8,73 @@ struct PopoverView: View {
     @ObservedObject private var quickActions = QuickActionsManager.shared
     @State private var selectedIndex: Int = 0
     @State private var draggingFavID: String?
+    @State private var opened: Bool = false
+    @State private var localKeyMonitor: Any? = nil
+    @State private var memoryUsed: UInt64 = 0
+    @State private var memoryTotal: UInt64 = 0
     @FocusState private var searchFocused: Bool
     @Environment(\.colorScheme) var colorScheme
     let onOpenSettings: () -> Void
     let onAppLaunched: () -> Void
 
+    // MARK: - Mode helpers
+    private var isSwitcher: Bool { store.invocationMode == .switcher }
+
+    /// Live-filtered favorites for the switcher strip. Filters by name (case-insensitive)
+    /// against `store.searchQuery`. Manager mode is unaffected.
+    private var filteredFavorites: [FavoriteApp] {
+        let q = store.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !q.isEmpty else { return favVM.favorites }
+        let lower = q.lowercased()
+        return favVM.favorites.filter { $0.name.lowercased().contains(lower) }
+    }
+
+    /// A row that can be selected with the keyboard and acted on with Return / Cmd+digit.
+    /// Unifies AppDetectionResult-backed rows and favorite-backed rows behind a single action.
+    private struct SelectableRow: Identifiable {
+        let id: String
+        let action: () -> Void
+    }
+
+    /// Flat list of selectable rows in the same visual order they appear on screen.
+    /// Switcher mode: Open Now → Favorites → Recently Active.
+    /// Manager mode: Favorites → Pinned → Recently Active → Other Running.
+    private var selectableRows: [SelectableRow] {
+        var rows: [SelectableRow] = []
+        let favIDs = Set(favVM.favorites.compactMap { $0.bundleIdentifier })
+
+        if isSwitcher {
+            // Switcher mode (global shortcut) shows favorites only, filtered by search.
+            for fav in filteredFavorites {
+                rows.append(SelectableRow(id: "fav:\(fav.id)") {
+                    favVM.launchApp(fav)
+                    onAppLaunched()
+                })
+            }
+        } else {
+            for fav in favVM.favorites {
+                rows.append(SelectableRow(id: "fav:\(fav.id)") {
+                    favVM.launchApp(fav)
+                    onAppLaunched()
+                })
+            }
+            for app in store.pinnedAppItems {
+                rows.append(SelectableRow(id: "pin:\(app.bundleIdentifier)") {
+                    store.activateApp(app.bundleIdentifier)
+                    onAppLaunched()
+                })
+            }
+            for app in store.otherApps where !store.pinnedBundleIDs.contains(app.bundleIdentifier) {
+                rows.append(SelectableRow(id: "other:\(app.bundleIdentifier)") {
+                    store.activateApp(app.bundleIdentifier)
+                    onAppLaunched()
+                })
+            }
+        }
+        return rows
+    }
+
+    /// Kept for source-compat with callers that reference AppDetectionResult-only rows.
     private var allRows: [AppDetectionResult] {
         let pinned = store.pinnedAppItems
         let recent = store.recentlyActiveItems.filter { !pinned.contains($0) }
@@ -23,41 +86,101 @@ struct PopoverView: View {
         VStack(spacing: 0) {
             titleHeader
             searchBar
-            Divider()
+            softDivider
             contentArea
-            Divider()
+            softDivider
             footerBar
         }
-        .frame(width: 320)
+        .frame(width: isSwitcher ? 600 : 320)
         .background(Color(nsColor: .windowBackgroundColor))
+        // Open animation: fade + tiny zoom-in. Lightweight, native-feeling.
+        .opacity(opened ? 1.0 : 0.0)
+        .scaleEffect(opened ? 1.0 : 0.97)
         .onAppear {
             store.refreshRunningApps()
+            fetchMemoryStats()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 searchFocused = true
             }
+            opened = false
+            withAnimation(.easeOut(duration: 0.16)) { opened = true }
+            installLocalKeyMonitor()
         }
+        .onDisappear { removeLocalKeyMonitor() }
         .onChange(of: store.searchQuery) { _ in selectedIndex = 0 }
-        .background(KeyHandlingView(
-            onDownArrow: { moveSelection(by: 1) },
-            onUpArrow: { moveSelection(by: -1) },
-            onReturn: { activateSelected() },
-            onEscape: { closePopover() }
-        ))
+        .onChange(of: store.filteredApps.count) { _ in fetchMemoryStats() }
+    }
+
+    // MARK: - Keyboard handling
+    /// Installs an NSEvent local monitor that intercepts navigation keys *before*
+    /// they reach the focused search field. Returning nil from the monitor stops
+    /// propagation so the TextField never sees them.
+    private func installLocalKeyMonitor() {
+        removeLocalKeyMonitor()
+        localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            // Option+1..9 quick jump — read keyCode (not characters) so the option
+            // modifier doesn't turn the digit into a typographic glyph like ¡ or ™.
+            if event.modifierFlags.contains(.option) {
+                let digitForKeyCode: [UInt16: Int] = [
+                    18: 1, 19: 2, 20: 3, 21: 4, 23: 5,
+                    22: 6, 26: 7, 28: 8, 25: 9
+                ]
+                if let digit = digitForKeyCode[event.keyCode] {
+                    activateRow(at: digit - 1)
+                    return nil
+                }
+            }
+            // In switcher (horizontal strip) mode, all arrows move by one item.
+            // Manager (list) mode keeps single-step up/down and ignores
+            // left/right so cursor movement still works in the search field.
+            switch event.keyCode {
+            case 125: // down
+                moveSelection(by: isSwitcher ? 1 : 1); return nil
+            case 126: // up
+                moveSelection(by: isSwitcher ? -1 : -1); return nil
+            case 123: // left
+                if isSwitcher { moveSelection(by: -1); return nil }
+                return event
+            case 124: // right
+                if isSwitcher { moveSelection(by: 1); return nil }
+                return event
+            case 36, 76: activateSelected(); return nil   // return / numpad enter
+            case 53: closePopover(); return nil           // escape
+            default: return event
+            }
+        }
+    }
+
+    private func removeLocalKeyMonitor() {
+        if let monitor = localKeyMonitor {
+            NSEvent.removeMonitor(monitor)
+            localKeyMonitor = nil
+        }
+    }
+
+    private var softDivider: some View {
+        Rectangle()
+            .fill(Color.primary.opacity(0.1))
+            .frame(height: 1)
+            .padding(.horizontal, 10)
     }
 
     // MARK: - Title Header
+    @ViewBuilder
     private var titleHeader: some View {
-        HStack {
-            Text("OverflowPeek")
-                .font(.custom("New York", size: 18))
-                .fontWeight(.medium)
-                .tracking(0.6)
-                .foregroundStyle(.primary.opacity(0.85))
-            Spacer()
+        if !isSwitcher {
+            HStack {
+                Text("OverflowPeek")
+                    .font(.custom("New York", size: 18))
+                    .fontWeight(.medium)
+                    .tracking(0.6)
+                    .foregroundStyle(.primary.opacity(0.85))
+                Spacer()
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 12)
+            .padding(.bottom, 2)
         }
-        .padding(.horizontal, 14)
-        .padding(.top, 12)
-        .padding(.bottom, 2)
     }
 
     // MARK: - Search Bar
@@ -80,10 +203,14 @@ struct PopoverView: View {
             }
         }
         .padding(.horizontal, 10)
-        .padding(.vertical, 7)
-        .background(Color(nsColor: .controlBackgroundColor))
+        .padding(.vertical, isSwitcher ? 5 : 7)
+        .background(
+            isSwitcher
+                ? Color.primary.opacity(0.06)
+                : Color(nsColor: .controlBackgroundColor)
+        )
         .cornerRadius(6)
-        .padding(10)
+        .padding(isSwitcher ? 8 : 10)
     }
 
     // MARK: - Content Area
@@ -91,6 +218,16 @@ struct PopoverView: View {
     private var contentArea: some View {
         if store.isLoading {
             loadingView
+        } else if isSwitcher {
+            // Switcher mode reads from favorites, not the running-apps list, so
+            // it has its own empty/no-results gating.
+            if favVM.favorites.isEmpty {
+                switcherEmptyState
+            } else if filteredFavorites.isEmpty {
+                noSearchResultsView
+            } else {
+                switcherHorizontalStrip
+            }
         } else if allRows.isEmpty && store.searchQuery.isEmpty {
             EmptyStateView(onRefresh: { store.refreshRunningApps() })
         } else if store.filteredApps.isEmpty {
@@ -105,6 +242,8 @@ struct PopoverFavoriteRow: View {
     let fav: FavoriteApp
     @ObservedObject var favVM: FavoriteAppsViewModel
     var onLaunched: (() -> Void)?
+    var isSelected: Bool = false
+    var quickJumpIndex: Int? = nil
     @State private var isHovered = false
 
     private var running: Bool { favVM.isRunning(fav) }
@@ -116,27 +255,39 @@ struct PopoverFavoriteRow: View {
                     Image(nsImage: icon)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 24, height: 24)
-                        .cornerRadius(4)
+                        .frame(width: 28, height: 28)
+                        .cornerRadius(5)
                 } else {
                     Image(systemName: "star.fill")
-                        .font(.system(size: 18))
+                        .font(.system(size: 20))
                         .foregroundStyle(.secondary)
-                        .frame(width: 24, height: 24)
+                        .frame(width: 28, height: 28)
                 }
             }
 
-            VStack(alignment: .leading, spacing: 1) {
+            HStack(spacing: 5) {
+                Circle()
+                    .fill(running ? Color.green : Color.gray.opacity(0.35))
+                    .frame(width: 6, height: 6)
                 Text(fav.name)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
                     .lineLimit(1)
                     .truncationMode(.tail)
-                Text(running ? "Running" : "Not running")
-                    .font(.system(size: 10))
-                    .foregroundStyle(running ? .green : .secondary)
             }
 
             Spacer()
+
+            if let n = quickJumpIndex, n >= 1, n <= 9, !isHovered {
+                Text("⌥\(n)")
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            .fill(Color.primary.opacity(0.08))
+                    )
+            }
 
             if isHovered {
                 HStack(spacing: 6) {
@@ -160,7 +311,20 @@ struct PopoverFavoriteRow: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .frame(height: 36)
+        .frame(height: 38)
+        .background(
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .fill(isSelected
+                      ? Color.accentColor.opacity(0.15)
+                      : (isHovered ? Color.primary.opacity(0.06) : Color.clear))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .strokeBorder(
+                    isSelected ? Color.accentColor.opacity(0.4) : Color.clear,
+                    lineWidth: 1
+                )
+        )
         .contentShape(Rectangle())
         .onTapGesture { favVM.launchApp(fav); onLaunched?() }
         .onHover { isHovered = $0 }
@@ -194,22 +358,96 @@ struct PopoverFavoriteRow: View {
 
     @ViewBuilder
     private var appListView: some View {
-        let pinned = store.filteredApps.filter { store.pinnedBundleIDs.contains($0.bundleIdentifier) }
-        let recent = store.filteredApps.filter {
-            !store.pinnedBundleIDs.contains($0.bundleIdentifier) &&
-            store.recentlyActiveBundleIDs.contains($0.bundleIdentifier)
+        managerList
+    }
+
+    // MARK: - Switcher horizontal strip (keyboard-driven; favorites-only)
+    private static let switcherCardWidth: CGFloat = 96
+    private static let switcherCardSpacing: CGFloat = 10
+
+    @ViewBuilder
+    private var switcherHorizontalStrip: some View {
+        let favs = filteredFavorites
+        ScrollViewReader { scrollProxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: Self.switcherCardSpacing) {
+                    ForEach(Array(favs.enumerated()), id: \.element.id) { idx, fav in
+                        SwitcherAppCard(
+                            fav: fav,
+                            favVM: favVM,
+                            isSelected: isSelected(rowIndex(for: "fav:\(fav.id)")),
+                            quickJumpIndex: idx < 9 ? idx + 1 : nil,
+                            onActivate: {
+                                favVM.launchApp(fav)
+                                onAppLaunched()
+                            }
+                        )
+                        .id(fav.id)
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+            }
+            .overlay(alignment: .leading) {
+                LinearGradient(
+                    colors: [Color(nsColor: .windowBackgroundColor).opacity(0.85), .clear],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .frame(width: 20)
+                .allowsHitTesting(false)
+            }
+            .overlay(alignment: .trailing) {
+                LinearGradient(
+                    colors: [.clear, Color(nsColor: .windowBackgroundColor).opacity(0.85)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .frame(width: 20)
+                .allowsHitTesting(false)
+            }
+            .onChange(of: selectedIndex) { newIndex in
+                let favs = filteredFavorites
+                guard newIndex >= 0, newIndex < favs.count else { return }
+                withAnimation(.easeOut(duration: 0.15)) {
+                    scrollProxy.scrollTo(favs[newIndex].id, anchor: .center)
+                }
+            }
         }
+    }
+
+    /// Switcher mode empty state — shown when the user hasn't added any favorites.
+    private var switcherEmptyState: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "star")
+                .font(.system(size: 22))
+                .foregroundStyle(.secondary)
+            Text("No favorites yet")
+                .font(.system(size: 12, weight: .medium))
+            Text("Add favorites from Settings → Favorite Apps.")
+                .font(.system(size: 10))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, minHeight: 200)
+    }
+
+    // MARK: - Manager list (existing favorites/pinned/recent/running ordering)
+    @ViewBuilder
+    private var managerList: some View {
+        let pinned = store.filteredApps.filter { store.pinnedBundleIDs.contains($0.bundleIdentifier) }
         let other = store.filteredApps.filter {
-            !store.pinnedBundleIDs.contains($0.bundleIdentifier) &&
-            !store.recentlyActiveBundleIDs.contains($0.bundleIdentifier)
+            !store.pinnedBundleIDs.contains($0.bundleIdentifier)
         }
 
         ScrollView(.vertical, showsIndicators: true) {
             VStack(alignment: .leading, spacing: 0) {
                 if !favVM.favorites.isEmpty {
                     SectionHeader(title: "FAVORITES", icon: "star.fill", count: favVM.favorites.count)
+                        .padding(.top, 4)
                     ForEach(Array(favVM.favorites.enumerated()), id: \.element.id) { index, fav in
-                        PopoverFavoriteRow(fav: fav, favVM: favVM, onLaunched: onAppLaunched)
+                        PopoverFavoriteRow(fav: fav, favVM: favVM, onLaunched: onAppLaunched,
+                                           isSelected: isSelected(rowIndex(for: "fav:\(fav.id)")),
+                                           quickJumpIndex: index < 9 ? index + 1 : nil)
                             .opacity(draggingFavID == fav.id ? 0.5 : 1.0)
                             .onDrag {
                                 draggingFavID = fav.id
@@ -234,10 +472,11 @@ struct PopoverFavoriteRow: View {
 
                 if !pinned.isEmpty {
                     SectionHeader(title: "PINNED", icon: "pin.fill", count: pinned.count)
-                    ForEach(Array(pinned.enumerated()), id: \.element.id) { index, app in
+                        .padding(.top, 6)
+                    ForEach(pinned, id: \.id) { app in
                         AppRowView(
                             app: app,
-                            isSelected: isSelected(index),
+                            isSelected: isSelected(rowIndex(for: "pin:\(app.bundleIdentifier)")),
                             onPin: nil,
                             onUnpin: { store.unpinApp(app.bundleIdentifier) },
                             onQuit: { store.quitApp(app.bundleIdentifier) },
@@ -248,28 +487,13 @@ struct PopoverFavoriteRow: View {
                     }
                 }
 
-                if !recent.isEmpty {
-                    SectionHeader(title: "RECENTLY ACTIVE", icon: "clock.fill", count: nil)
-                    ForEach(Array(recent.enumerated()), id: \.element.id) { index, app in
-                        AppRowView(
-                            app: app,
-                            isSelected: isSelected(pinned.count + index),
-                            onPin: { store.pinApp(app.bundleIdentifier) },
-                            onUnpin: nil,
-                            onQuit: { store.quitApp(app.bundleIdentifier) },
-                            onHide: { store.excludeApp(app.bundleIdentifier) },
-                            onDetails: nil
-                        )
-                        .onTapGesture { store.activateApp(app.bundleIdentifier); onAppLaunched() }
-                    }
-                }
-
                 if !other.isEmpty {
                     SectionHeader(title: "RUNNING", icon: "app.dashed", count: nil)
-                    ForEach(Array(other.enumerated()), id: \.element.id) { index, app in
+                        .padding(.top, 6)
+                    ForEach(other, id: \.id) { app in
                         AppRowView(
                             app: app,
-                            isSelected: isSelected(pinned.count + recent.count + index),
+                            isSelected: isSelected(rowIndex(for: "other:\(app.bundleIdentifier)")),
                             onPin: { store.pinApp(app.bundleIdentifier) },
                             onUnpin: nil,
                             onQuit: { store.quitApp(app.bundleIdentifier) },
@@ -280,23 +504,75 @@ struct PopoverFavoriteRow: View {
                     }
                 }
             }
+            .padding(.bottom, 4)
         }
-        .frame(maxHeight: 430)
     }
 
     // MARK: - Footer
+    @ViewBuilder
     private var footerBar: some View {
-        HStack {
-            HStack(spacing: 4) {
-                Text("\(store.filteredApps.count) app\(store.filteredApps.count == 1 ? "" : "s")")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                if store.pinnedBundleIDs.count > 0 {
-                    Text("· \(store.pinnedBundleIDs.count) pinned")
-                        .font(.system(size: 11))
+        if isSwitcher {
+            switcherHintBar
+        } else {
+            managerFooter
+        }
+    }
+
+    /// Compact key-hint bar shown only in switcher mode.
+    private var switcherHintBar: some View {
+        HStack(spacing: 12) {
+            keyHint("⏎",   label: "Switch")
+            keyHint("← →", label: "Navigate")
+            keyHint("⌥1–9", label: "Jump")
+            keyHint("esc", label: "Close")
+            Spacer()
+            Text("\(selectableRows.count) result\(selectableRows.count == 1 ? "" : "s")")
+                .font(.system(size: 10))
+                .foregroundStyle(.tertiary)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+    }
+
+    private func keyHint(_ key: String, label: String) -> some View {
+        HStack(spacing: 4) {
+            Text(key)
+                .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                .padding(.horizontal, 5)
+                .padding(.vertical, 1)
+                .background(
+                    RoundedRectangle(cornerRadius: 3, style: .continuous)
+                        .fill(Color.primary.opacity(0.08))
+                )
+            Text(label)
+                .font(.system(size: 10))
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    /// Original manager-mode footer: count, quick actions, refresh, settings.
+    private var managerFooter: some View {
+        HStack(spacing: 8) {
+            Text("\(store.filteredApps.count) app\(store.filteredApps.count == 1 ? "" : "s")")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+
+            if memoryTotal > 0 {
+                HStack(spacing: 4) {
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 2, style: .continuous)
+                            .fill(Color.primary.opacity(0.12))
+                            .frame(width: 36, height: 5)
+                        RoundedRectangle(cornerRadius: 2, style: .continuous)
+                            .fill(memoryColor)
+                            .frame(width: max(2, 36 * memoryRatio), height: 5)
+                    }
+                    Text(memoryLabel)
+                        .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                 }
             }
+
             Spacer()
             ForEach(quickActions.paths, id: \.self) { path in
                 if FileManager.default.fileExists(atPath: path) {
@@ -310,7 +586,7 @@ struct PopoverFavoriteRow: View {
                     .help("Open \(QuickActionsManager.displayName(for: path))")
                 }
             }
-            Button(action: { store.refreshRunningApps() }) {
+            Button(action: { store.refreshRunningApps(); fetchMemoryStats() }) {
                 Image(systemName: "arrow.clockwise")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
@@ -325,22 +601,78 @@ struct PopoverFavoriteRow: View {
             .buttonStyle(.plain)
             .help("Settings (Cmd+,)")
         }
-.padding(.horizontal, 12)
+        .padding(.horizontal, 12)
         .padding(.vertical, 6)
     }
 
+    private var memoryRatio: CGFloat {
+        guard memoryTotal > 0 else { return 0 }
+        return min(1, CGFloat(memoryUsed) / CGFloat(memoryTotal))
+    }
+
+    private var memoryColor: Color {
+        if memoryRatio > 0.8 { return .orange }
+        if memoryRatio > 0.65 { return .yellow.opacity(0.8) }
+        return Color.green.opacity(0.7)
+    }
+
+    private var memoryLabel: String {
+        let usedGB = Double(memoryUsed) / 1_073_741_824
+        let totalGB = Double(memoryTotal) / 1_073_741_824
+        return String(format: "%.1f/%.0f GB", usedGB, totalGB)
+    }
+
+    private func fetchMemoryStats() {
+        let total = ProcessInfo.processInfo.physicalMemory
+        let pageSize = UInt64(sysconf(Int32(_SC_PAGESIZE)))
+
+        var info = vm_statistics64()
+        var count = mach_msg_type_number_t(MemoryLayout<vm_statistics64>.size / MemoryLayout<integer_t>.size)
+        let result = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                host_statistics64(mach_host_self(), HOST_VM_INFO64, $0, &count)
+            }
+        }
+        guard result == KERN_SUCCESS else {
+            memoryTotal = total
+            memoryUsed = 0
+            return
+        }
+
+        let usedPages = UInt64(info.active_count)
+            + UInt64(info.wire_count)
+            + UInt64(info.compressor_page_count)
+        memoryTotal = total
+        memoryUsed = min(total, usedPages * pageSize)
+    }
+
     // MARK: - Helpers
-    private func isSelected(_ index: Int) -> Bool { selectedIndex == index }
+    private func isSelected(_ index: Int) -> Bool { index >= 0 && selectedIndex == index }
+
+    /// Position of the row with the given selectable id in the current visible list.
+    /// Returns -1 if not present (so the row never shows as selected).
+    private func rowIndex(for id: String) -> Int {
+        selectableRows.firstIndex(where: { $0.id == id }) ?? -1
+    }
 
     private func moveSelection(by delta: Int) {
-        let maxIndex = allRows.count - 1
+        let rows = selectableRows
+        let maxIndex = rows.count - 1
         guard maxIndex >= 0 else { return }
         selectedIndex = max(0, min(maxIndex, selectedIndex + delta))
     }
 
     private func activateSelected() {
-        guard selectedIndex >= 0, selectedIndex < allRows.count else { return }
-        store.activateApp(allRows[selectedIndex].bundleIdentifier)
+        let rows = selectableRows
+        guard selectedIndex >= 0, selectedIndex < rows.count else { return }
+        rows[selectedIndex].action()
+    }
+
+    /// Cmd+1..9 quick-jump: directly invoke the Nth visible row (1-indexed).
+    private func activateRow(at index: Int) {
+        let rows = selectableRows
+        guard index >= 0, index < rows.count else { return }
+        rows[index].action()
     }
 
     private func closePopover() {
@@ -399,10 +731,19 @@ struct KeyHandlingView: NSViewRepresentable {
     var onUpArrow: () -> Void
     var onReturn: () -> Void
     var onEscape: () -> Void
+    var onCmdDigit: ((Int) -> Void)? = nil
 
     func makeNSView(context: Context) -> NSView {
         let view = KeyCaptureNSView()
         view.onKeyEvent = { event in
+            // Cmd+1..9 quick-jump (only if the cmd-digit handler was provided)
+            if let cmdDigit = onCmdDigit,
+               event.modifierFlags.contains(.command),
+               let chars = event.charactersIgnoringModifiers,
+               let digit = Int(chars), digit >= 1 && digit <= 9 {
+                cmdDigit(digit)
+                return
+            }
             switch event.keyCode {
             case 125: onDownArrow()
             case 126: onUpArrow()
@@ -430,6 +771,100 @@ private class KeyCaptureNSView: NSView {
     }
 }
 
+// MARK: - Switcher App Card (horizontal launcher strip)
+/// Icon-forward card used in the keyboard-shortcut switcher overlay.
+/// Larger icon (48 px), subtle running indicator, and clear focus state
+/// make it easy to scan and select with arrow keys.
+struct SwitcherAppCard: View {
+    let fav: FavoriteApp
+    @ObservedObject var favVM: FavoriteAppsViewModel
+    var isSelected: Bool = false
+    var quickJumpIndex: Int? = nil
+    var onActivate: () -> Void
+
+    @State private var isHovered = false
+
+    private var running: Bool { favVM.isRunning(fav) }
+
+    var body: some View {
+        VStack(alignment: .center, spacing: 6) {
+            ZStack(alignment: .topTrailing) {
+                Group {
+                    if let icon = NSWorkspace.shared.icon(forFile: fav.path) as NSImage? {
+                        Image(nsImage: icon)
+                            .resizable()
+                            .interpolation(.high)
+                            .aspectRatio(contentMode: .fit)
+                    } else {
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 32))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .frame(width: 48, height: 48)
+                .shadow(color: .black.opacity(0.12), radius: 2, y: 1)
+
+                if let n = quickJumpIndex, n >= 1, n <= 9 {
+                    Text("\(n)")
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.primary.opacity(0.7))
+                        .frame(width: 14, height: 14)
+                        .background(
+                            Circle().fill(Color.primary.opacity(0.12))
+                        )
+                        .overlay(
+                            Circle().strokeBorder(Color.primary.opacity(0.18), lineWidth: 0.5)
+                        )
+                        .offset(x: 6, y: -4)
+                }
+
+                if running {
+                    Circle()
+                        .fill(Color.green)
+                        .frame(width: 7, height: 7)
+                        .overlay(
+                            Circle().strokeBorder(.background, lineWidth: 1.5)
+                        )
+                        .offset(x: 4, y: 4)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                }
+            }
+
+            Text(fav.name)
+                .font(.system(size: 11, weight: isSelected ? .semibold : .medium))
+                .foregroundStyle(isSelected ? .primary : .secondary)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, minHeight: 28, alignment: .top)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 10)
+        .frame(width: 96, height: 104)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(
+                    isSelected
+                        ? Color.accentColor.opacity(0.15)
+                        : (isHovered ? Color.primary.opacity(0.06) : Color.clear)
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(
+                    isSelected ? Color.accentColor.opacity(0.5) : Color.clear,
+                    lineWidth: 1.5
+                )
+        )
+        .scaleEffect(isSelected ? 1.04 : 1.0)
+        .animation(.easeOut(duration: 0.15), value: isSelected)
+        .animation(.easeOut(duration: 0.15), value: isHovered)
+        .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .onTapGesture { onActivate() }
+        .onHover { isHovered = $0 }
+        .help(running ? "\(fav.name) — Running" : fav.name)
+    }
+}
+
 // MARK: - Section Header
 struct SectionHeader: View {
     let title: String
@@ -438,31 +873,23 @@ struct SectionHeader: View {
     var subtitle: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(.secondary)
-                Text(title)
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.secondary)
-                    .tracking(0.5)
-                if let count = count {
-                    Text("\(count)")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(.tertiary)
-                }
-                Spacer()
-            }
-            if let subtitle = subtitle {
-                Text(subtitle)
-                    .font(.system(size: 9))
+        HStack(spacing: 5) {
+            Image(systemName: icon)
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(.secondary)
+            Text(title)
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(.secondary)
+                .tracking(0.5)
+            if let count = count {
+                Text("\(count)")
+                    .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(.tertiary)
             }
+            Spacer()
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+        .padding(.vertical, 5)
     }
 }
 
